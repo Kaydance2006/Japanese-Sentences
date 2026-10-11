@@ -27,4 +27,4 @@ A beginner Japanese game for kids (about age 10). It practices particles, nouns,
 
 ## Notes
 - Progress (stars, stickers, questions already seen) is saved in the browser's local storage.
-- The alcohol sentences (おさけ) from the practice sheet were left out because this is for a child. Two kid-friendly drinks (ジュース) were added instead.
+- The alcohol sentences (おさけ) from the practice sheet were left out because this is for a child. A kid-friendly drink, ジュース (juice), was added instead.
