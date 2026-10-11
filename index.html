@@ -1,0 +1,1398 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nihongo Express</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+/* Layout: a Japanese train line. The home screen is a route map of station signs (one per game);
+   each game is a ride of 10 stops shown as train cars. Single bright daytime look on purpose. */
+:root {
+  color-scheme: light;
+  --sky: #d9ecfb;
+  --sky-deep: #b9dcf6;
+  --paper: #ffffff;
+  --paper-2: #f2f7fc;
+  --ink: #1d2742;
+  --ink-soft: #55607d;
+  --rail: #9aa7bd;
+  --good: #1f9d55;
+  --good-bg: #e2f6ea;
+  --bad: #d93a3f;
+  --bad-bg: #fde6e6;
+  --gold: #ffbf1f;
+  --gold-deep: #c98a00;
+  /* train line colors, one per station */
+  --l-green: #2ba84a;
+  --l-orange: #f08a12;
+  --l-blue: #1e7fd8;
+  --l-red: #e2403c;
+  --l-purple: #8a55d0;
+  --l-pink: #e0558f;
+  --l-teal: #10989a;
+  /* particle colors, from the class handout color key */
+  --p-wa: #1e7fd8;
+  --p-o: #e2403c;
+  --p-de: #1f9d55;
+  --p-ni: #e57b00;
+  --p-mo: #8a55d0;
+  --p-no: #10989a;
+  --p-ka: #e0558f;
+  --p-x: #55607d;
+  --f-display: "Dela Gothic One", "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
+  --f-body: "M PLUS Rounded 1c", "Hiragino Maru Gothic ProN", "Yu Gothic", "Meiryo", system-ui, sans-serif;
+  --radius: 18px;
+  --shadow: 0 3px 0 rgba(29, 39, 66, .12), 0 10px 24px rgba(29, 39, 66, .08);
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { min-height: 100%; }
+body {
+  margin: 0;
+  background: var(--sky);
+  background-image: radial-gradient(circle at 1px 1px, var(--sky-deep) 1.5px, transparent 0);
+  background-size: 22px 22px;
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 17px;
+  line-height: 1.5;
+  -webkit-tap-highlight-color: transparent;
+}
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible { outline: 3px solid var(--l-blue); outline-offset: 3px; }
+.wrap { max-width: 940px; margin: 0 auto; padding-inline: 16px; padding-block: 12px 48px; }
+.jp { font-family: var(--f-body); font-weight: 800; }
+.rm { display: block; font-size: .72em; font-weight: 400; color: var(--ink-soft); letter-spacing: .01em; }
+body.no-romaji .rm { display: none; }
+
+/* ---------- top bar ---------- */
+.topbar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
+  background: var(--paper); border-bottom: 4px solid var(--l-green);
+  box-shadow: 0 2px 10px rgba(29, 39, 66, .08);
+}
+.topbar-in { max-width: 940px; margin: 0 auto; padding: 8px 16px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 10px; background: none; border: 0; padding: 0; text-align: left; }
+.brand-mark { font-size: 30px; line-height: 1; }
+.brand-name { font-family: var(--f-display); font-size: 20px; line-height: 1.05; }
+.brand-name small { display: block; font-family: var(--f-body); font-weight: 700; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-soft); }
+.spacer { flex: 1; }
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; background: var(--paper-2); font-weight: 800; font-size: 15px; white-space: nowrap; }
+.pill.stars { background: #fff4d1; color: #7a5200; }
+.tog { border: 2px solid var(--sky-deep); background: var(--paper); border-radius: 12px; padding: 4px 10px; font-weight: 700; font-size: 14px; min-height: 38px; }
+.tog[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.voice-note { max-width: 940px; margin: 10px auto 0; padding: 10px 16px; background: #fff4d1; border-radius: 12px; font-size: 14px; color: #6b4a00; }
+
+/* ---------- home: route map ---------- */
+.hero { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; margin: 18px 0 8px; }
+.mascot { font-size: 64px; line-height: 1; filter: drop-shadow(0 4px 0 rgba(29,39,66,.12)); }
+.mascot.bounce { animation: bounce .5s ease; }
+.bubble { position: relative; background: var(--paper); border-radius: var(--radius); padding: 12px 16px; box-shadow: var(--shadow); min-width: 0; }
+.bubble::before { content: ""; position: absolute; left: -10px; top: 50%; transform: translateY(-50%); border: 10px solid transparent; border-right-color: var(--paper); border-left: 0; }
+.bubble h1 { font-family: var(--f-display); font-weight: 400; font-size: clamp(22px, 5vw, 32px); margin: 0; line-height: 1.15; text-wrap: balance; }
+.bubble p { margin: 4px 0 0; color: var(--ink-soft); }
+.track { position: relative; height: 34px; margin: 14px 0 6px; }
+.track::before { content: ""; position: absolute; left: 0; right: 0; top: 22px; height: 6px; border-radius: 3px; background: repeating-linear-gradient(90deg, var(--rail) 0 14px, transparent 14px 22px); }
+.train { position: absolute; top: 0; font-size: 28px; animation: ride 14s linear infinite; }
+@keyframes ride { from { left: -40px; } to { left: calc(100% + 10px); } }
+.rank { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; background: var(--paper); border-radius: var(--radius); padding: 12px 16px; box-shadow: var(--shadow); margin-bottom: 18px; }
+.rank b { font-family: var(--f-display); font-weight: 400; font-size: 18px; }
+.rank-bar { flex: 1 1 180px; height: 14px; border-radius: 7px; background: var(--paper-2); overflow: hidden; }
+.rank-bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--gold), #ff8a3d); border-radius: 7px; transition: width .6s; }
+.rank small { color: var(--ink-soft); font-size: 13px; }
+.stations { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.sign {
+  display: flex; flex-direction: column; text-align: left; padding: 0; overflow: hidden;
+  background: var(--paper); border: 0; border-radius: var(--radius); box-shadow: var(--shadow);
+  transition: transform .15s;
+}
+.sign:hover { transform: translateY(-3px); }
+.sign:active { transform: translateY(1px); }
+.sign-top { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; padding: 14px 16px 10px; }
+.sign-num { display: grid; place-items: center; width: 46px; height: 46px; border: 4px solid var(--c); border-radius: 10px; font-weight: 800; font-size: 11px; line-height: 1; text-align: center; }
+.sign-num b { display: block; font-size: 18px; }
+.sign-kana { font-family: var(--f-display); font-size: 28px; line-height: 1.1; min-width: 0; }
+.sign-kana small { display: block; font-family: var(--f-body); font-size: 13px; font-weight: 700; color: var(--ink-soft); letter-spacing: .06em; }
+.sign-icon { font-size: 34px; }
+.sign-band { background: var(--c); color: var(--paper); display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 7px 16px; font-weight: 800; font-size: 15px; }
+.sign-stars { letter-spacing: 2px; color: #fff3c4; white-space: nowrap; }
+.sign-desc { padding: 10px 16px 14px; color: var(--ink-soft); font-size: 14px; }
+.home-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 18px; }
+.foot { margin-top: 26px; font-size: 13px; color: var(--ink-soft); max-width: 65ch; }
+
+/* ---------- buttons ---------- */
+.btn {
+  border: 0; border-radius: 16px; padding: 12px 20px; min-height: 52px;
+  background: var(--l-blue); color: var(--paper); font-weight: 800; font-size: 18px;
+  box-shadow: 0 4px 0 rgba(0,0,0,.22); transition: transform .08s, box-shadow .08s;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,.22); }
+.btn.alt { background: var(--paper); color: var(--ink); box-shadow: 0 4px 0 var(--sky-deep); }
+.btn.go { background: var(--good); }
+.btn.gold { background: var(--gold); color: #4a3200; }
+.btn:disabled { opacity: .45; cursor: default; transform: none; }
+
+/* ---------- play screen ---------- */
+.play-head { display: flex; align-items: center; gap: 12px; margin: 14px 0; flex-wrap: wrap; }
+.play-title { font-family: var(--f-display); font-size: 22px; flex: 1 1 auto; min-width: 0; }
+.play-title small { display: block; font-family: var(--f-body); font-size: 13px; font-weight: 700; color: var(--ink-soft); }
+.combo { font-weight: 800; color: #c2410c; background: #ffedd5; padding: 4px 12px; border-radius: 999px; animation: pop .3s ease; }
+.cars { display: flex; gap: 5px; margin-bottom: 14px; }
+.car { flex: 1; height: 20px; border-radius: 6px 6px 3px 3px; background: var(--paper); border: 2px solid var(--sky-deep); position: relative; }
+.car::after { content: ""; position: absolute; left: 18%; right: 18%; top: 4px; height: 6px; border-radius: 2px; background: var(--sky-deep); }
+.car.now { border-color: var(--ink); }
+.car.ok { background: var(--good); border-color: var(--good); }
+.car.no { background: var(--bad); border-color: var(--bad); }
+.car.ok::after, .car.no::after { background: rgba(255,255,255,.55); }
+.card { background: var(--paper); border-radius: 22px; box-shadow: var(--shadow); padding: 18px; }
+.q-ask { font-weight: 800; font-size: 18px; margin: 0 0 10px; color: var(--ink-soft); }
+.big-emoji { font-size: 92px; line-height: 1.1; text-align: center; animation: pop .35s ease; }
+.big-en { text-align: center; font-weight: 800; font-size: 22px; }
+.center { text-align: center; }
+.opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
+.opts.three { grid-template-columns: minmax(0, 1fr); }
+.opt {
+  background: var(--paper); border: 3px solid var(--sky-deep); border-radius: 18px; padding: 12px; min-height: 72px;
+  font-size: 22px; font-weight: 800; box-shadow: 0 4px 0 var(--sky-deep); transition: transform .08s;
+}
+.opt:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--sky-deep); }
+.opt .lab { display: block; font-size: 14px; color: var(--ink-soft); font-weight: 700; }
+.opt.pic { font-size: 56px; line-height: 1.1; }
+.opt.right { border-color: var(--good); background: var(--good-bg); box-shadow: 0 4px 0 var(--good); animation: pop .3s; }
+.opt.wrong { border-color: var(--bad); background: var(--bad-bg); box-shadow: 0 4px 0 var(--bad); animation: shake .4s; }
+.opt:disabled { cursor: default; }
+.opt.part { font-size: 40px; line-height: 1.1; color: var(--pc); border-color: var(--pc); }
+.speak-row { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin: 6px 0; }
+.speak-big { width: 96px; height: 96px; border-radius: 50%; border: 0; background: var(--l-orange); color: var(--paper); font-size: 44px; box-shadow: 0 5px 0 #b86500; }
+.speak-big.slow { width: 72px; height: 72px; font-size: 32px; background: var(--l-teal); box-shadow: 0 5px 0 #07686a; align-self: center; }
+.speak-big:active { transform: translateY(4px); box-shadow: 0 1px 0 #b86500; }
+.mini-say { border: 0; background: var(--paper-2); border-radius: 10px; padding: 4px 10px; font-size: 18px; }
+
+/* sentence + chunks */
+.sentence { display: flex; flex-wrap: wrap; gap: 8px 6px; align-items: flex-start; justify-content: center; font-size: 24px; margin: 10px 0; }
+.chunk { display: inline-flex; flex-direction: column; align-items: center; padding: 4px 6px; border-radius: 10px; transition: background .2s; }
+.chunk .w { font-weight: 800; }
+.chunk.speaking { background: #fff1b8; }
+.pt { font-weight: 800; }
+.pt-は { color: var(--p-wa); } .pt-を { color: var(--p-o); } .pt-で { color: var(--p-de); } .pt-に { color: var(--p-ni); }
+.pt-も { color: var(--p-mo); } .pt-の { color: var(--p-no); } .pt-か { color: var(--p-ka); } .pt-✖ { color: var(--p-x); }
+.blank { display: inline-block; min-width: 1.4em; border-bottom: 4px dashed var(--ink-soft); text-align: center; color: transparent; }
+.blank.filled { color: inherit; border-bottom-style: solid; border-color: var(--good); animation: pop .3s; }
+.en-line { text-align: center; font-weight: 700; color: var(--ink-soft); font-size: 17px; }
+.strip { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.strip .it { display: flex; flex-direction: column; align-items: center; min-width: 58px; padding: 6px 4px; border-radius: 12px; background: var(--paper-2); }
+.strip .it span:first-child { font-size: 34px; line-height: 1.15; }
+.strip .it span:last-child { font-size: 12px; font-weight: 700; color: var(--ink-soft); max-width: 90px; text-align: center; line-height: 1.2; }
+.strip .it.neg span:first-child { position: relative; }
+.strip .it.neg span:first-child::after { content: "🚫"; position: absolute; right: -8px; bottom: -4px; font-size: 18px; }
+.opt.strip-opt { padding: 10px 6px; min-height: 0; }
+
+/* builder */
+.slots, .bank { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; min-height: 74px; padding: 10px; border-radius: 16px; }
+.slots { background: var(--paper-2); border: 3px dashed var(--sky-deep); margin-top: 12px; }
+.slot { width: 74px; height: 56px; border-radius: 12px; border: 2px dashed var(--rail); }
+.tile {
+  border: 0; border-radius: 14px; padding: 8px 14px; min-height: 56px; background: var(--paper);
+  box-shadow: 0 4px 0 var(--sky-deep), 0 0 0 2px var(--sky-deep) inset; font-size: 22px; font-weight: 800;
+  display: inline-flex; flex-direction: column; align-items: center; animation: pop .2s;
+}
+.tile:active { transform: translateY(3px); }
+.tile.ok { box-shadow: 0 4px 0 var(--good), 0 0 0 3px var(--good) inset; background: var(--good-bg); }
+.tile.no { box-shadow: 0 4px 0 var(--bad), 0 0 0 3px var(--bad) inset; background: var(--bad-bg); }
+.build-actions { display: flex; justify-content: center; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
+
+/* meter + week */
+.meter { display: inline-flex; gap: 4px; padding: 6px; background: var(--paper-2); border-radius: 10px; }
+.meter i { width: 22px; height: 34px; border-radius: 5px; background: #dbe3ee; }
+.meter i.on { background: linear-gradient(180deg, #ffd34d, #ff9a1f); }
+.meter.big i { width: 36px; height: 56px; }
+.week { display: flex; gap: 4px; justify-content: center; flex-wrap: wrap; margin-top: 10px; }
+.week .d { display: flex; flex-direction: column; align-items: center; padding: 6px 8px; border-radius: 10px; background: var(--paper-2); font-size: 13px; font-weight: 700; min-width: 48px; }
+.week .d b { font-size: 22px; font-family: var(--f-display); font-weight: 400; }
+.week .d.hl { background: var(--gold); }
+.kanji-big { font-family: var(--f-display); font-size: 84px; line-height: 1; text-align: center; }
+
+/* feedback */
+.feedback { margin-top: 14px; border-radius: 22px; padding: 16px 18px; display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; align-items: start; animation: rise .3s ease; }
+.feedback.ok { background: var(--good-bg); border: 3px solid var(--good); }
+.feedback.no { background: var(--bad-bg); border: 3px solid var(--bad); }
+.fb-face { font-size: 54px; line-height: 1; grid-row: span 2; }
+.fb-title { font-family: var(--f-display); font-size: 24px; line-height: 1.2; }
+.fb-title small { font-family: var(--f-body); font-weight: 700; font-size: 15px; color: var(--ink-soft); margin-left: 6px; }
+.fb-body { min-width: 0; }
+.fb-body p { margin: 4px 0; }
+.fb-actions { grid-column: 1 / -1; display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; margin-top: 6px; }
+.tipbox { background: var(--paper); border-radius: 12px; padding: 8px 12px; margin-top: 6px; font-size: 15px; }
+
+/* results + stickers */
+.results { text-align: center; padding-block: 18px; }
+.res-stars { font-size: 70px; letter-spacing: 6px; line-height: 1.1; }
+.res-stars .off { filter: grayscale(1); opacity: .3; }
+.res-stars span { display: inline-block; animation: pop .5s both; }
+.res-stars span:nth-child(2) { animation-delay: .25s; } .res-stars span:nth-child(3) { animation-delay: .5s; }
+.res-title { font-family: var(--f-display); font-size: 32px; margin: 6px 0; }
+.res-score { font-size: 20px; font-weight: 800; }
+.new-sticker { display: inline-flex; align-items: center; gap: 14px; margin: 16px auto; background: #fff4d1; border-radius: 20px; padding: 12px 20px; font-weight: 800; }
+.new-sticker span { font-size: 64px; animation: spin-in .8s ease both; }
+.res-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
+.sticker-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 12px; margin-top: 14px; }
+.stk { aspect-ratio: 1; max-width: 100%; display: grid; place-items: center; font-size: 46px; border-radius: 18px; background: var(--paper); box-shadow: var(--shadow); }
+.stk.locked { background: var(--paper-2); color: var(--rail); font-size: 26px; font-weight: 800; box-shadow: none; border: 3px dashed var(--sky-deep); }
+.sec-title { font-family: var(--f-display); font-size: 26px; margin: 18px 0 4px; }
+
+#fx { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; }
+
+@keyframes pop { 0% { transform: scale(.6); } 70% { transform: scale(1.08); } 100% { transform: scale(1); } }
+@keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-7px); } 75% { transform: translateX(7px); } }
+@keyframes bounce { 0%,100% { transform: translateY(0); } 40% { transform: translateY(-14px); } }
+@keyframes rise { from { transform: translateY(14px); opacity: .3; } to { transform: none; opacity: 1; } }
+@keyframes spin-in { from { transform: scale(0) rotate(-200deg); } to { transform: scale(1) rotate(0); } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+@media (max-width: 520px) {
+  body { font-size: 16px; }
+  .brand-name { font-size: 15px; }
+  .brand-mark { font-size: 24px; }
+  .tl { display: none; }
+  .tog { padding: 4px 8px; }
+  .topbar-in { flex-wrap: nowrap; gap: 6px; }
+  .pill { padding: 4px 8px; }
+  .mascot { font-size: 50px; }
+  .opt { font-size: 19px; }
+  .opt.pic { font-size: 46px; }
+  .sentence { font-size: 20px; }
+  .tile { font-size: 19px; padding: 6px 10px; }
+  .big-emoji { font-size: 76px; }
+  .strip .it { min-width: 48px; }
+  .strip .it span:first-child { font-size: 28px; }
+}
+</style>
+</head>
+<body>
+<canvas id="fx" aria-hidden="true"></canvas>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <button class="brand" id="brand" type="button" aria-label="Go to the station map">
+      <span class="brand-mark" aria-hidden="true">🚄</span>
+      <span class="brand-name">にほんごエクスプレス<small>Nihongo Express</small></span>
+    </button>
+    <span class="spacer"></span>
+    <span class="pill stars" title="Total stars"><span aria-hidden="true">⭐</span><span id="star-count">0</span></span>
+    <button class="tog" id="t-sound" type="button" aria-pressed="true" title="Sound effects" aria-label="Sound effects">🔊<span class="tl"> Sound</span></button>
+    <button class="tog" id="t-slow" type="button" aria-pressed="false" title="Slow Japanese voice" aria-label="Slow Japanese voice">🐢<span class="tl"> Slow</span></button>
+    <button class="tog" id="t-romaji" type="button" aria-pressed="true" title="Show romaji (English letters)" aria-label="Show romaji">ABC<span class="tl"> Romaji</span></button>
+  </div>
+</header>
+<div class="voice-note" id="voice-note" hidden></div>
+
+<main class="wrap">
+  <!-- HOME -->
+  <section id="v-home">
+    <div class="hero">
+      <div class="mascot" id="home-mascot" aria-hidden="true">🐱</div>
+      <div class="bubble">
+        <h1>こんにちは！ Pick a station.</h1>
+        <p>I'm ネコせんせい (Neko-sensei). Every ride has 10 new questions. Get stars to unlock stickers!</p>
+      </div>
+    </div>
+    <div class="track" aria-hidden="true"><span class="train">🚃🚃🚃</span></div>
+    <div class="rank" id="rank"></div>
+    <div class="stations" id="stations"></div>
+    <div class="home-actions">
+      <button class="btn gold" id="open-stickers" type="button">📒 Sticker Book</button>
+    </div>
+    <p class="foot">Tip for grown-ups: the Japanese voice comes from your device's built-in speech. Use 🐢 Slow for a slower voice, and turn off ABC Romaji when your learner is ready to read only kana. Progress is saved in this browser.</p>
+  </section>
+
+  <!-- PLAY -->
+  <section id="v-play" hidden>
+    <div class="play-head">
+      <button class="btn alt" id="quit" type="button" aria-label="Back to map">◀ Map</button>
+      <div class="play-title" id="play-title"></div>
+      <span class="combo" id="combo" hidden></span>
+    </div>
+    <div class="cars" id="cars" aria-label="Progress"></div>
+    <div class="card" id="q-area"></div>
+    <div id="feedback" hidden></div>
+  </section>
+
+  <!-- RESULTS -->
+  <section id="v-results" hidden>
+    <div class="card results" id="results"></div>
+  </section>
+
+  <!-- STICKERS -->
+  <section id="v-stickers" hidden>
+    <div class="play-head">
+      <button class="btn alt" id="stk-back" type="button">◀ Map</button>
+      <div class="play-title">シールちょう<small>Sticker Book</small></div>
+    </div>
+    <p>Finish a ride with 6 or more right answers to win a new sticker.</p>
+    <div class="sticker-grid" id="sticker-grid"></div>
+  </section>
+</main>
+
+<script>
+'use strict';
+/* =========================================================
+   Helpers
+   ========================================================= */
+const $ = (s, r = document) => r.querySelector(s);
+function h(tag, props, ...kids) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(props || {})) {
+    if (v == null || v === false) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'html') el.innerHTML = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else el.setAttribute(k, v === true ? '' : v);
+  }
+  for (const kid of kids.flat()) {
+    if (kid == null || kid === false) continue;
+    el.append(kid.nodeType ? kid : document.createTextNode(String(kid)));
+  }
+  return el;
+}
+const rnd = n => Math.floor(Math.random() * n);
+const pick = a => a[rnd(a.length)];
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const sample = (a, n) => shuffle(a).slice(0, n);
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+const reduceMotion = () => window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* =========================================================
+   Word lists (from the GENKI cheat sheet + 50 practice sentences)
+   ========================================================= */
+const PEOPLE = [
+  { k: 'わたし', r: 'watashi', en: 'I', l: 'me', e: '🙋', first: true },
+  { k: 'たけしさん', r: 'Takeshi-san', en: 'Takeshi', e: '👦' },
+  { k: 'メアリーさん', r: 'Mearii-san', en: 'Mary', e: '👧' },
+  { k: 'ロバートさん', r: 'Robaato-san', en: 'Robert', e: '🧑' },
+  { k: 'ソラさん', r: 'Sora-san', en: 'Sora', e: '🧒' },
+  { k: 'ナオミさん', r: 'Naomi-san', en: 'Naomi', e: '👩' },
+  { k: 'カルロスさん', r: 'Karurosu-san', en: 'Carlos', e: '👨' },
+  { k: 'やましたせんせい', r: 'Yamashita-sensei', en: 'Teacher Yamashita', l: 'Yamashita-sensei', e: '👨‍🏫' },
+];
+
+const PLACES = {
+  'いえ': { r: 'ie', en: 'home', at: 'at home', to: 'home', e: '🏠' },
+  'がっこう': { r: 'gakkou', en: 'school', at: 'at school', to: 'to school', e: '🏫' },
+  'だいがく': { r: 'daigaku', en: 'university', at: 'at university', to: 'to university', e: '🎓' },
+  'としょかん': { r: 'toshokan', en: 'library', at: 'at the library', to: 'to the library', e: '📚' },
+  'カフェ': { r: 'kafe', en: 'café', at: 'at a café', to: 'to a café', e: '🧁' },
+  'ぎんこう': { r: 'ginkou', en: 'bank', at: 'at the bank', to: 'to the bank', e: '🏦' },
+  'コンビニ': { r: 'konbini', en: 'convenience store', at: 'at the convenience store', to: 'to the convenience store', e: '🏪' },
+  'ゆうびんきょく': { r: 'yuubinkyoku', en: 'post office', at: 'at the post office', to: 'to the post office', e: '🏣' },
+  'とうきょう': { r: 'toukyou', en: 'Tokyo', at: 'in Tokyo', to: 'to Tokyo', e: '🗼', far: true },
+  'ながさき': { r: 'nagasaki', en: 'Nagasaki', at: 'in Nagasaki', to: 'to Nagasaki', e: '⛵', far: true },
+};
+for (const [k, v] of Object.entries(PLACES)) { v.k = k; v.l = v.en; }
+const IKU_PLACES = ['がっこう', 'だいがく', 'としょかん', 'カフェ', 'ぎんこう', 'コンビニ', 'ゆうびんきょく', 'とうきょう', 'ながさき'];
+
+const VERBS = {
+  taberu: { d: 'たべる', m: 'たべます', n: 'たべません', rm: 'tabemasu', rn: 'tabemasen', en: 'eat', e: '😋' },
+  nomu: { d: 'のむ', m: 'のみます', n: 'のみません', rm: 'nomimasu', rn: 'nomimasen', en: 'drink', e: '🥤' },
+  yomu: { d: 'よむ', m: 'よみます', n: 'よみません', rm: 'yomimasu', rn: 'yomimasen', en: 'read', e: '👓' },
+  miru: { d: 'みる', m: 'みます', n: 'みません', rm: 'mimasu', rn: 'mimasen', en: 'watch / see', e: '👀' },
+  kiku: { d: 'きく', m: 'ききます', n: 'ききません', rm: 'kikimasu', rn: 'kikimasen', en: 'listen', e: '🎧' },
+  hanasu: { d: 'はなす', m: 'はなします', n: 'はなしません', rm: 'hanashimasu', rn: 'hanashimasen', en: 'speak', e: '🗣️' },
+  benkyou: { d: 'べんきょうする', m: 'べんきょうします', n: 'べんきょうしません', rm: 'benkyou shimasu', rn: 'benkyou shimasen', en: 'study', e: '✏️' },
+  suru: { d: 'する', m: 'します', n: 'しません', rm: 'shimasu', rn: 'shimasen', en: 'do / play', e: '🙌' },
+  iku: { d: 'いく', m: 'いきます', n: 'いきません', rm: 'ikimasu', rn: 'ikimasen', en: 'go', e: '🚶' },
+  kuru: { d: 'くる', m: 'きます', n: 'きません', rm: 'kimasu', rn: 'kimasen', en: 'come', e: '👋' },
+  kaeru: { d: 'かえる', m: 'かえります', n: 'かえりません', rm: 'kaerimasu', rn: 'kaerimasen', en: 'go home', e: '🔙' },
+  neru: { d: 'ねる', m: 'ねます', n: 'ねません', rm: 'nemasu', rn: 'nemasen', en: 'sleep', e: '😴', en2: ['go to sleep', 'goes to sleep'] },
+  okiru: { d: 'おきる', m: 'おきます', n: 'おきません', rm: 'okimasu', rn: 'okimasen', en: 'wake up', e: '⏰', en2: ['wake up', 'wakes up'] },
+};
+
+// Things you do somewhere: object を verb, at places で
+const A = (k, r, l, e, v, en, places, hrs) => ({ k, r, l, e, v, en, places, h: hrs });
+const ACTS = [
+  A('あさごはん', 'asagohan', 'breakfast', '🍳', 'taberu', ['eat breakfast', 'eats breakfast'], ['いえ', 'カフェ', 'がっこう'], [6, 7, 8]),
+  A('ひるごはん', 'hirugohan', 'lunch', '🍱', 'taberu', ['eat lunch', 'eats lunch'], ['がっこう', 'だいがく', 'カフェ', 'いえ'], [11, 12, 1]),
+  A('ばんごはん', 'bangohan', 'dinner', '🍛', 'taberu', ['eat dinner', 'eats dinner'], ['いえ', 'カフェ'], [6, 7, 8]),
+  A('パン', 'pan', 'bread', '🍞', 'taberu', ['eat bread', 'eats bread'], ['いえ', 'カフェ', 'がっこう']),
+  A('コーヒー', 'koohii', 'coffee', '☕', 'nomu', ['drink coffee', 'drinks coffee'], ['いえ', 'カフェ', 'だいがく']),
+  A('おちゃ', 'ocha', 'tea', '🍵', 'nomu', ['drink tea', 'drinks tea'], ['いえ', 'カフェ', 'がっこう']),
+  A('ジュース', 'juusu', 'juice', '🧃', 'nomu', ['drink juice', 'drinks juice'], ['いえ', 'カフェ', 'がっこう']),
+  A('ほん', 'hon', 'book', '📕', 'yomu', ['read a book', 'reads a book'], ['いえ', 'としょかん', 'がっこう']),
+  A('ざっし', 'zasshi', 'magazine', '📰', 'yomu', ['read a magazine', 'reads a magazine'], ['いえ', 'としょかん', 'カフェ']),
+  A('テレビ', 'terebi', 'TV', '📺', 'miru', ['watch TV', 'watches TV'], ['いえ']),
+  A('えいが', 'eiga', 'movie', '🎬', 'miru', ['watch a movie', 'watches a movie'], ['いえ']),
+  A('おんがく', 'ongaku', 'music', '🎵', 'kiku', ['listen to music', 'listens to music'], ['いえ', 'カフェ']),
+  A('にほんご', 'nihongo', 'Japanese', '🗾', 'benkyou', ['study Japanese', 'studies Japanese'], ['がっこう', 'だいがく', 'としょかん', 'いえ']),
+  A('えいご', 'eigo', 'English', '🔤', 'benkyou', ['study English', 'studies English'], ['がっこう', 'だいがく', 'としょかん', 'いえ']),
+  A('ふらんすご', 'furansugo', 'French', '🥖', 'benkyou', ['study French', 'studies French'], ['だいがく', 'としょかん']),
+  A('にほんご', 'nihongo', 'Japanese', '🗾', 'hanasu', ['speak Japanese', 'speaks Japanese'], ['がっこう', 'だいがく']),
+  A('えいご', 'eigo', 'English', '🔤', 'hanasu', ['speak English', 'speaks English'], ['がっこう', 'だいがく', 'いえ']),
+  A('てにす', 'tenisu', 'tennis', '🎾', 'suru', ['play tennis', 'plays tennis'], ['がっこう', 'だいがく']),
+  A('しごと', 'shigoto', 'work', '💼', 'suru', ['work', 'works'], ['ぎんこう', 'コンビニ', 'ゆうびんきょく']),
+];
+
+// Times
+const HK = ['', 'いち', 'に', 'さん', 'よ', 'ご', 'ろく', 'しち', 'はち', 'く', 'じゅう', 'じゅういち', 'じゅうに'];
+const HR = ['', 'ichi', 'ni', 'san', 'yo', 'go', 'roku', 'shichi', 'hachi', 'ku', 'juu', 'juuichi', 'juuni'];
+const FW = n => String(n).replace(/\d/g, d => String.fromCharCode(0xFF10 + Number(d)));
+function clockTime(hr, half) {
+  const hm = `${hr}:${half ? '30' : '00'}`;
+  return {
+    type: 'clock', k: FW(hr) + 'じ' + (half ? 'はん' : ''), sp: HK[hr] + 'じ' + (half ? 'はん' : ''),
+    r: HR[hr] + '-ji' + (half ? ' han' : ''), p: 'に', en: 'at ' + hm, l: hm,
+    e: String.fromCodePoint((half ? 0x1F55C : 0x1F550) + hr - 1),
+  };
+}
+const DAYS = [
+  { k: 'げつようび', r: 'getsuyoubi', en: 'Monday', s: 'Mon', kan: '月', mean: 'moon', e: '🌙' },
+  { k: 'かようび', r: 'kayoubi', en: 'Tuesday', s: 'Tue', kan: '火', mean: 'fire', e: '🔥' },
+  { k: 'すいようび', r: 'suiyoubi', en: 'Wednesday', s: 'Wed', kan: '水', mean: 'water', e: '💧' },
+  { k: 'もくようび', r: 'mokuyoubi', en: 'Thursday', s: 'Thu', kan: '木', mean: 'tree', e: '🌳' },
+  { k: 'きんようび', r: "kin'youbi", en: 'Friday', s: 'Fri', kan: '金', mean: 'gold', e: '💰' },
+  { k: 'どようび', r: 'doyoubi', en: 'Saturday', s: 'Sat', kan: '土', mean: 'earth', e: '⛰️' },
+  { k: 'にちようび', r: 'nichiyoubi', en: 'Sunday', s: 'Sun', kan: '日', mean: 'sun', e: '☀️' },
+];
+const dayTime = d => ({ type: 'day', k: d.k, r: d.r, p: 'に', en: 'on ' + d.en, l: d.s, e: d.e });
+const REL = [
+  { k: 'きょう', r: 'kyou', en: 'today', e: '📍' },
+  { k: 'あした', r: 'ashita', en: 'tomorrow', e: '🌄', fut: true },
+  { k: 'あさ', r: 'asa', en: 'in the morning', l: 'morning', e: '🌅' },
+  { k: 'よる', r: 'yoru', en: 'at night', l: 'night', e: '🌃' },
+  { k: 'しゅうまつ', r: 'shuumatsu', en: 'on the weekend', l: 'weekend', e: '🎉' },
+  { k: 'こんしゅう', r: 'konshuu', en: 'this week', e: '👉' },
+  { k: 'らいしゅう', r: 'raishuu', en: 'next week', e: '⏭️', fut: true },
+  { k: 'こんげつ', r: 'kongetsu', en: 'this month', e: '📆' },
+  { k: 'ことし', r: 'kotoshi', en: 'this year', e: '🎍' },
+  { k: 'らいねん', r: 'rainen', en: 'next year', e: '🎆', fut: true },
+].map(t => ({ ...t, type: 'rel', p: '', l: t.l || t.en }));
+
+// How often
+const FREQS = [
+  { k: 'まいにち', r: 'mainichi', en: 'every day', pos: 'end', e: '🔁' },
+  { k: 'まいしゅう', r: 'maishuu', en: 'every week', pos: 'end', e: '🗓️' },
+  { k: 'いつも', r: 'itsumo', en: 'always', pos: 'pre', e: '💯', lvl: 5 },
+  { k: 'よく', r: 'yoku', en: 'often', pos: 'pre', e: '👍', lvl: 4 },
+  { k: 'ときどき', r: 'tokidoki', en: 'sometimes', pos: 'pre', e: '🎲', lvl: 3 },
+  { k: 'あまり', r: 'amari', en: 'not very often', pos: 'neg', neg: true, e: '👎', lvl: 1 },
+  { k: 'ぜんぜん', r: 'zenzen', en: 'never', pos: 'neg', neg: true, e: '🚫', lvl: 0 },
+].map(f => ({ ...f, l: f.en }));
+const METER_FREQS = FREQS.filter(f => f.lvl != null);
+
+// Particles
+const PART = {
+  'は': { r: 'wa', sp: 'わ', job: 'は (wa) marks the topic: who or what the sentence is about.', tip: 'わたしは… = "As for me…"' },
+  'を': { r: 'o', sp: 'お', job: 'を (o) marks the THING the action is done to.', tip: 'パンを たべます = eat bread' },
+  'で': { r: 'de', sp: 'で', job: 'で (de) marks WHERE you DO an action.', tip: 'Doing something (eat, study, read)? → で' },
+  'に': { r: 'ni', sp: 'に', job: 'に (ni) marks where you are GOING, or an exact time or day.', tip: 'がっこうに いきます · ７じに · げつようびに' },
+  'も': { r: 'mo', sp: 'も', job: 'も (mo) means "also / too". It takes the place of は.', tip: 'ロバートさんも = Robert too' },
+  'の': { r: 'no', sp: 'の', job: 'の (no) links two nouns, like "\'s" or "of".', tip: "たけしさんの ともだち = Takeshi's friend" },
+  'か': { r: 'ka', sp: 'か', job: 'か (ka) at the end turns the sentence into a question.', tip: 'たべますか = Do you eat?' },
+  '✖': { r: '(none)', sp: '', job: 'No particle! Words like きょう, あした, しゅうまつ, まいにち do not take に.', tip: 'Clock times and days of the week take に. Most other time words take nothing.' },
+};
+const PARTICLE_LIST = ['は', 'を', 'で', 'に', 'も', 'の', 'か', '✖'];
+
+const STICKERS = ['🐼', '🦊', '🐸', '🐙', '🦄', '🍣', '🍙', '🗻', '🎏', '🎐', '🏯', '🚄', '🌸', '🐉', '🎎', '🍡', '🐱', '🐶', '🐰', '🐯', '🍥', '⛩️', '🎋', '🐳', '🦖', '🍜', '🎑', '🐧'];
+const RANKS = [
+  { at: 0, k: 'たまご', en: 'Egg', e: '🥚' },
+  { at: 20, k: 'ひよこ', en: 'Chick', e: '🐣' },
+  { at: 60, k: 'うさぎ', en: 'Bunny', e: '🐰' },
+  { at: 120, k: 'にんじゃ', en: 'Ninja', e: '🥷' },
+  { at: 220, k: 'サムライ', en: 'Samurai', e: '⚔️' },
+  { at: 400, k: 'しょうぐん', en: 'Shogun', e: '🏯' },
+  { at: 700, k: 'ドラゴン', en: 'Dragon', e: '🐉' },
+];
+const PRAISE = [['すごい！', 'Awesome!'], ['やったね！', 'You did it!'], ['じょうず！', 'So good!'], ['いいね！', 'Nice!'], ['かんぺき！', 'Perfect!'], ['てんさい！', 'Genius!']];
+const OOPS = [['ドンマイ！', "Don't worry!"], ['おしい！', 'So close!'], ['がんばって！', 'You can do it!']];
+
+/* =========================================================
+   Saved progress (this browser only)
+   ========================================================= */
+const KEY = 'nihongo-express-v1';
+const S = (() => {
+  let d = {};
+  try { d = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { d = {}; }
+  return {
+    stars: d.stars || 0, stickers: d.stickers || [], seen: d.seen || {}, last: d.last || {}, best: d.best || {},
+    settings: Object.assign({ sound: true, slow: false, romaji: true }, d.settings || {}),
+  };
+})();
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* storage unavailable: progress lasts this visit only */ } }
+
+/* =========================================================
+   Sound effects (Web Audio, no files needed)
+   ========================================================= */
+const Sfx = {
+  ctx: null,
+  ensure() {
+    if (!this.ctx) { const AC = window.AudioContext || window.webkitAudioContext; if (AC) this.ctx = new AC(); }
+    if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+    return this.ctx;
+  },
+  tone(f, at, dur, type = 'sine', vol = .18, slideTo) {
+    const c = this.ctx, t = c.currentTime + at;
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
+    g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + .015); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + dur + .05);
+  },
+  play(name) {
+    if (!S.settings.sound) return;
+    const c = this.ensure(); if (!c) return;
+    const T = (...a) => this.tone(...a);
+    switch (name) {
+      case 'tap': T(880, 0, .07, 'sine', .12); break;
+      case 'tile': T(520, 0, .06, 'triangle', .2); T(780, .03, .06, 'triangle', .1); break;
+      case 'ok': [523, 659, 784, 1047].forEach((f, i) => T(f, i * .08, .22, 'triangle', .18)); T(2093, .32, .3, 'sine', .06); break;
+      case 'no': T(330, 0, .18, 'square', .07, 250); T(247, .17, .3, 'square', .07, 160); break;
+      case 'start': [392, 523, 659].forEach((f, i) => T(f, i * .1, .2, 'triangle', .15)); break;
+      case 'combo': [784, 988, 1175, 1568].forEach((f, i) => T(f, i * .06, .15, 'sine', .1)); break;
+      case 'fanfare': [[523, 0], [523, .15], [523, .3], [659, .45], [784, .7], [659, .95], [784, 1.1], [1047, 1.3]].forEach(([f, t]) => T(f, t, .3, 'triangle', .17)); break;
+      case 'sticker': for (let i = 0; i < 8; i++) T(1200 + i * 180, i * .05, .12, 'sine', .08); break;
+    }
+  },
+};
+
+/* =========================================================
+   Japanese voice (built-in speech synthesis)
+   ========================================================= */
+const Voice = {
+  ok: 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window,
+  voice: null, loaded: false, tok: 0,
+  init() {
+    if (!this.ok) { this.note(); return; }
+    const load = () => {
+      const vs = speechSynthesis.getVoices();
+      const ja = vs.filter(v => /^ja([-_]|$)/i.test(v.lang));
+      this.voice = ja.find(v => /google/i.test(v.name)) || ja.find(v => /kyoko|o-ren|nanami|haruka|ayumi|sayaka/i.test(v.name)) || ja[0] || null;
+      if (vs.length) this.loaded = true;
+      this.note();
+    };
+    load();
+    if (speechSynthesis.addEventListener) speechSynthesis.addEventListener('voiceschanged', load);
+    setTimeout(load, 1500);
+  },
+  note() {
+    const el = $('#voice-note');
+    if (!this.ok) { el.textContent = 'This browser cannot speak Japanese out loud. Try Chrome, Edge or Safari to hear the sentences.'; el.hidden = false; }
+    else if (this.loaded && !this.voice) { el.textContent = 'No Japanese voice was found on this device, so sentences may sound wrong. Add a Japanese voice in your device\'s speech / language settings, or try Chrome.'; el.hidden = false; }
+    else el.hidden = true;
+  },
+  _say(text, rate) {
+    return new Promise(res => {
+      if (!this.ok || !text) { res(); return; }
+      try {
+        speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'ja-JP'; if (this.voice) u.voice = this.voice;
+        u.rate = rate || (S.settings.slow ? .6 : .85); u.pitch = 1.05;
+        let done = false; const fin = () => { if (!done) { done = true; res(); } };
+        u.onend = fin; u.onerror = fin;
+        setTimeout(fin, 1500 + text.length * 450);
+        setTimeout(() => speechSynthesis.speak(u), 60);
+      } catch (e) { res(); }
+    });
+  },
+  say(text, rate) { this.tok++; return this._say(text, rate); },
+  async chunks(ch, holder) {
+    const tok = ++this.tok;
+    const els = holder ? holder.querySelectorAll('.chunk') : [];
+    for (let i = 0; i < ch.length; i++) {
+      if (tok !== this.tok) break;
+      els.forEach((e, j) => e.classList.toggle('speaking', j === i));
+      await this._say(speechOf(ch[i]), .6);
+    }
+    els.forEach(e => e.classList.remove('speaking'));
+  },
+  stop() { this.tok++; if (this.ok) speechSynthesis.cancel(); },
+};
+
+/* =========================================================
+   Confetti
+   ========================================================= */
+const FX = {
+  parts: [], running: false,
+  init() {
+    this.cv = $('#fx'); this.c = this.cv.getContext('2d');
+    const rs = () => { this.cv.width = innerWidth * devicePixelRatio; this.cv.height = innerHeight * devicePixelRatio; };
+    rs(); addEventListener('resize', rs);
+  },
+  burst(n = 40, x = innerWidth / 2, y = innerHeight / 3) {
+    if (reduceMotion()) return;
+    const cols = ['#e2403c', '#f08a12', '#ffbf1f', '#2ba84a', '#1e7fd8', '#8a55d0', '#e0558f'];
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * Math.PI * 2, sp = 3 + Math.random() * 8;
+      this.parts.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 6, r: Math.random() * 6.3, vr: (Math.random() - .5) * .3, s: 7 + Math.random() * 8, col: pick(cols), life: 80 + rnd(50), star: Math.random() < .3 });
+    }
+    if (!this.running) { this.running = true; requestAnimationFrame(() => this.tick()); }
+  },
+  burstAt(el, n) { const r = el.getBoundingClientRect(); this.burst(n, r.left + r.width / 2, r.top + r.height / 2); },
+  tick() {
+    const c = this.c, d = devicePixelRatio;
+    c.clearRect(0, 0, this.cv.width, this.cv.height);
+    this.parts = this.parts.filter(p => p.life-- > 0);
+    for (const p of this.parts) {
+      p.vy += .28; p.vx *= .99; p.x += p.vx; p.y += p.vy; p.r += p.vr;
+      c.save(); c.translate(p.x * d, p.y * d); c.rotate(p.r); c.fillStyle = p.col;
+      if (p.star) {
+        c.beginPath();
+        for (let i = 0; i < 10; i++) { const rr = (i % 2 ? .45 : 1) * p.s * d * .7, a = i * Math.PI / 5; c.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); }
+        c.closePath(); c.fill();
+      } else c.fillRect(-p.s * d / 2, -p.s * d / 4, p.s * d, p.s * d / 2);
+      c.restore();
+    }
+    if (this.parts.length) requestAnimationFrame(() => this.tick());
+    else { this.running = false; c.clearRect(0, 0, this.cv.width, this.cv.height); }
+  },
+};
+
+/* =========================================================
+   Sentence generator
+   A sentence = list of chunks. Each chunk is a word + its particle.
+   ========================================================= */
+const chunk = (k, r, p, role, e, l, sp) => ({ k, r, p: p || '', role, e, l, sp: sp || k });
+const speechOf = c => (c.sp || c.k) + (c.p && c.p !== '✖' ? c.p : '');
+const sentenceSpeech = ch => ch.map(speechOf).join(' ');
+const romajiOf = c => c.r + (c.p && c.p !== '✖' ? ' ' + PART[c.p].r : '');
+const sentenceRomaji = ch => ch.map(romajiOf).join(' ');
+
+function randClock(hours) { return clockTime(pick(hours), Math.random() < .35); }
+function randTimeFor(kind, P, o = {}) {
+  const hours = kind === 'act' ? (P.act.h || [3, 4, 5, 6, 7, 8]) : kind === 'sleep' ? (P.verb === 'neru' ? [9, 10, 11] : [5, 6, 7, 8]) : [7, 8, 9, 12, 3, 4, 5, 6];
+  if (kind === 'sleep' || o.clockOnly) return randClock(hours);
+  if (kind === 'move' && P.place.far) {
+    const far = REL.filter(t => ['しゅうまつ', 'らいしゅう', 'こんげつ', 'ことし', 'らいねん', 'こんしゅう'].includes(t.k));
+    return o.noRel ? dayTime(pick(DAYS)) : pick([...far, ...DAYS.map(dayTime)]);
+  }
+  const modes = ['clock', 'day']; if (!o.noRel) modes.push('rel', 'rel');
+  const m = pick(modes);
+  if (m === 'clock') return randClock(hours);
+  if (m === 'day') return dayTime(pick(DAYS));
+  return pick(REL);
+}
+function movePlaces(verb) { return verb === 'iku' ? IKU_PLACES : verb === 'kuru' ? ['がっこう', 'だいがく'] : ['いえ']; }
+function freqTimeOpts(f) { return { noRel: true, clockOnly: f.k === 'まいにち' }; }
+
+function randomParams(kind, size) {
+  const P = { person: pick(PEOPLE) };
+  if (kind === 'act') {
+    P.act = pick(ACTS);
+    if (size >= 4) P.place = PLACES[pick(P.act.places)];
+    if (size >= 5) {
+      if (Math.random() < .4) P.freq = pick(FREQS.filter(f => f.k !== 'まいしゅう'));
+      else P.time = randTimeFor(kind, P);
+    }
+  } else if (kind === 'move') {
+    P.verb = pick(['iku', 'iku', 'iku', 'kuru', 'kaeru']);
+    let cand = movePlaces(P.verb);
+    if (size >= 5) cand = cand.filter(k => !PLACES[k].far);
+    P.place = PLACES[pick(cand)];
+    if (size >= 5) { P.freq = pick(FREQS); P.time = randTimeFor(kind, P, freqTimeOpts(P.freq)); }
+    else if (size >= 4) P.time = randTimeFor(kind, P);
+  } else {
+    P.verb = pick(['neru', 'okiru']);
+    P.time = randTimeFor(kind, P);
+    if (size >= 4) P.freq = pick(FREQS.filter(f => ['まいにち', 'いつも', 'よく', 'ときどき'].includes(f.k)));
+  }
+  return P;
+}
+
+function englishFor(kind, P) {
+  const third = !P.person.first, S0 = P.person.en;
+  let v;
+  if (kind === 'act') v = P.act.en;
+  else if (kind === 'move') {
+    if (P.verb === 'kaeru') v = ['go home', 'goes home'];
+    else if (P.verb === 'kuru') v = ['come ' + P.place.to, 'comes ' + P.place.to];
+    else v = ['go ' + P.place.to, 'goes ' + P.place.to];
+  } else v = VERBS[P.verb].en2;
+  const pl = kind === 'act' && P.place ? P.place.at : '';
+  const t = P.time ? P.time.en : '';
+  const f = P.freq;
+  let w;
+  if (f && f.neg) w = f.k === 'ぜんぜん' ? [S0, 'never', v[third ? 1 : 0], pl, t] : [S0, third ? "doesn't" : "don't", v[0], pl, t, 'very often'];
+  else if (f && f.pos === 'pre') w = [S0, f.en, v[third ? 1 : 0], pl, t];
+  else if (f) w = [S0, v[third ? 1 : 0], pl, t, f.en];
+  else if (P.time && P.time.fut) w = [S0, 'will', v[0], pl, t];
+  else w = [S0, v[third ? 1 : 0], pl, t];
+  return cap(w.filter(Boolean).join(' ')) + '.';
+}
+
+function build(kind, P) {
+  const ch = [];
+  const pp = P.person;
+  ch.push(chunk(pp.k, pp.r, 'は', 'who', pp.e, pp.l || pp.en));
+  if (P.freq) ch.push(chunk(P.freq.k, P.freq.r, '', 'freq', P.freq.e, P.freq.l));
+  if (P.time) ch.push(chunk(P.time.k, P.time.r, P.time.p, 'when', P.time.e, P.time.l, P.time.sp));
+  let verb;
+  if (kind === 'act') {
+    if (P.place) ch.push(chunk(P.place.k, P.place.r, 'で', 'where', P.place.e, P.place.l));
+    ch.push(chunk(P.act.k, P.act.r, 'を', 'what', P.act.e, P.act.l));
+    verb = VERBS[P.act.v];
+  } else if (kind === 'move') {
+    ch.push(chunk(P.place.k, P.place.r, 'に', 'where', P.place.e, P.place.l));
+    verb = VERBS[P.verb];
+  } else verb = VERBS[P.verb];
+  const neg = !!(P.freq && P.freq.neg);
+  const vc = chunk(neg ? verb.n : verb.m, neg ? verb.rn : verb.rm, '', 'verb', verb.e, verb.en.split(' / ')[0]);
+  vc.neg = neg; ch.push(vc);
+  return { kind, P, ch, en: englishFor(kind, P), id: kind + ':' + ch.map(c => c.k + c.p).join('|') };
+}
+
+function genSentence(size, kinds) {
+  kinds = kinds || (size >= 5 ? ['act', 'act', 'act', 'move', 'move'] : ['act', 'act', 'act', 'move', 'move', 'sleep']);
+  const kind = pick(kinds);
+  return build(kind, randomParams(kind, size));
+}
+
+// Hand-written sentences from the practice sheet (も, の, questions, invitations, past)
+const C = (...a) => chunk(...a);
+const CURATED = [
+  { en: 'Robert also goes to university at 8:00.', ch: [C('ロバートさん', 'Robaato-san', 'も', 'who', '🧑', 'Robert'), C('８じ', 'hachi-ji', 'に', 'when', '🕗', '8:00', 'はちじ'), C('だいがく', 'daigaku', 'に', 'where', '🎓', 'university'), C('いきます', 'ikimasu', '', 'verb', '🚶', 'go')] },
+  { en: "Takeshi's friend comes to school at 8:00.", ch: [C('たけしさん', 'Takeshi-san', 'の', 'who', '👦', 'Takeshi'), C('ともだち', 'tomodachi', 'は', 'who', '🧑‍🤝‍🧑', 'friend'), C('８じ', 'hachi-ji', 'に', 'when', '🕗', '8:00', 'はちじ'), C('がっこう', 'gakkou', 'に', 'where', '🏫', 'school'), C('きます', 'kimasu', '', 'verb', '👋', 'come')] },
+  { en: "I read Teacher Yamashita's book.", ch: [C('わたし', 'watashi', 'は', 'who', '🙋', 'me'), C('やましたせんせい', 'Yamashita-sensei', 'の', 'who', '👨‍🏫', 'Yamashita-sensei'), C('ほん', 'hon', 'を', 'what', '📕', 'book'), C('よみます', 'yomimasu', '', 'verb', '👓', 'read')] },
+  { en: 'What will Mary eat tomorrow?', ch: [C('メアリーさん', 'Mearii-san', 'は', 'who', '👧', 'Mary'), C('あした', 'ashita', '', 'when', '🌄', 'tomorrow'), C('なに', 'nani', 'を', 'what', '❓', 'what?'), C('たべます', 'tabemasu', 'か', 'verb', '😋', 'eat')] },
+  { en: 'Where does Robert study?', ch: [C('ロバートさん', 'Robaato-san', 'は', 'who', '🧑', 'Robert'), C('どこ', 'doko', 'で', 'where', '❓', 'where?'), C('べんきょうします', 'benkyou shimasu', 'か', 'verb', '✏️', 'study')] },
+  { en: 'Shall we eat dinner tonight?', ch: [C('よる', 'yoru', '', 'when', '🌃', 'night'), C('ごはん', 'gohan', 'を', 'what', '🍚', 'meal'), C('たべません', 'tabemasen', 'か', 'verb', '😋', 'eat?')] },
+  { en: 'I did work today.', ch: [C('きょう', 'kyou', '', 'when', '📍', 'today'), C('しごと', 'shigoto', 'を', 'what', '💼', 'work'), C('しました', 'shimashita', '', 'verb', '🙌', 'did')] },
+  { en: 'I am a student too.', ch: [C('わたし', 'watashi', 'も', 'who', '🙋', 'me'), C('がくせいです', 'gakusei desu', '', 'verb', '🎒', 'student')] },
+  { en: 'Mary also drinks coffee.', ch: [C('メアリーさん', 'Mearii-san', 'も', 'who', '👧', 'Mary'), C('コーヒー', 'koohii', 'を', 'what', '☕', 'coffee'), C('のみます', 'nomimasu', '', 'verb', '🥤', 'drink')] },
+  { en: 'My friend speaks Japanese.', ch: [C('わたし', 'watashi', 'の', 'who', '🙋', 'me'), C('ともだち', 'tomodachi', 'は', 'who', '🧑‍🤝‍🧑', 'friend'), C('にほんご', 'nihongo', 'を', 'what', '🗾', 'Japanese'), C('はなします', 'hanashimasu', '', 'verb', '🗣️', 'speak')] },
+  { en: 'What will you drink?', ch: [C('なに', 'nani', 'を', 'what', '❓', 'what?'), C('のみます', 'nomimasu', 'か', 'verb', '🥤', 'drink')] },
+  { en: 'Shall we play tennis tomorrow?', ch: [C('あした', 'ashita', '', 'when', '🌄', 'tomorrow'), C('てにす', 'tenisu', 'を', 'what', '🎾', 'tennis'), C('しません', 'shimasen', 'か', 'verb', '🙌', 'play?')] },
+  { en: 'Sora also comes to school on Monday.', ch: [C('ソラさん', 'Sora-san', 'も', 'who', '🧒', 'Sora'), C('げつようび', 'getsuyoubi', 'に', 'when', '🌙', 'Mon'), C('がっこう', 'gakkou', 'に', 'where', '🏫', 'school'), C('きます', 'kimasu', '', 'verb', '👋', 'come')] },
+  { en: 'Naomi also goes home on Friday.', ch: [C('ナオミさん', 'Naomi-san', 'も', 'who', '👩', 'Naomi'), C('きんようび', "kin'youbi", 'に', 'when', '💰', 'Fri'), C('いえ', 'ie', 'に', 'where', '🏠', 'home'), C('かえります', 'kaerimasu', '', 'verb', '🔙', 'go home')] },
+].map((s, i) => ({ ...s, kind: 'cur', strict: true, id: 'cur' + i + ':' + s.ch.map(c => c.k + c.p).join('|') }));
+
+// Make a "look-alike" sentence that differs in one picture (for the listening game)
+function variant(s) {
+  const P0 = s.P, kind = s.kind;
+  for (let tries = 0; tries < 30; tries++) {
+    const P = { ...P0 };
+    const keys = ['person'];
+    if (P.time) keys.push('time');
+    if (P.freq) keys.push('freq');
+    if (kind === 'act') { keys.push('act'); if (P.place && P.act.places.length > 1) keys.push('place'); }
+    if (kind === 'move' && P.verb === 'iku') keys.push('place');
+    const key = pick(keys);
+    if (key === 'person') P.person = pick(PEOPLE.filter(x => x !== P0.person));
+    else if (key === 'time') P.time = P.freq ? randTimeFor(kind, P, freqTimeOpts(P.freq)) : randTimeFor(kind, P);
+    else if (key === 'freq') {
+      P.freq = pick(FREQS.filter(f => f.k !== P0.freq.k && (P.time && P.time.type === 'day' ? f.k !== 'まいにち' : true) && (kind === 'act' ? f.k !== 'まいしゅう' : true)));
+    } else if (key === 'act') {
+      const c = ACTS.filter(a => a !== P0.act && (!P.place || a.places.includes(P.place.k)));
+      if (!c.length) continue;
+      P.act = pick(c);
+      if (P.time && P.time.type === 'clock') P.time = randTimeFor(kind, P, { clockOnly: true });
+    } else if (key === 'place') {
+      if (kind === 'act') P.place = PLACES[pick(P.act.places.filter(k => k !== P0.place.k))];
+      else {
+        const ok = IKU_PLACES.filter(k => k !== P0.place.k && (!PLACES[k].far || (P.time && P.time.type !== 'clock' && !P.freq)));
+        P.place = PLACES[pick(ok)];
+      }
+    }
+    const v = build(kind, P);
+    if (v.id !== s.id && stripSig(v) !== stripSig(s)) return v;
+  }
+  return null;
+}
+const stripSig = s => s.ch.map(c => c.e + c.l + (c.neg ? '!' : '')).join('|');
+
+/* =========================================================
+   Shared UI pieces
+   ========================================================= */
+function strip(ch) {
+  return h('div', { class: 'strip', 'aria-label': 'Picture clues' },
+    ch.map(c => h('div', { class: 'it' + (c.neg ? ' neg' : '') }, h('span', { 'aria-hidden': 'true' }, c.e), h('span', null, c.l))));
+}
+function chunkEl(c, o = {}) {
+  const pt = o.blank ? h('span', { class: 'blank' }, '＿') : (c.p && c.p !== '✖' ? h('span', { class: 'pt pt-' + c.p }, c.p) : null);
+  return h('span', { class: 'chunk' },
+    h('span', null, h('span', { class: 'w jp' }, c.k), pt),
+    h('span', { class: 'rm' }, o.blank ? c.r + ' ___' : romajiOf(c)));
+}
+function sentenceEl(ch, o = {}) {
+  return h('div', { class: 'sentence', lang: 'ja' }, ch.map((c, i) => chunkEl(c, { blank: o.blank === i })));
+}
+function speakBtn(fn, label = 'Listen') {
+  return h('button', { class: 'speak-big', type: 'button', 'aria-label': label, onclick: fn }, '🔊');
+}
+function slowBtn(fn) {
+  return h('button', { class: 'speak-big slow', type: 'button', 'aria-label': 'Listen slowly, word by word', onclick: fn }, '🐢');
+}
+function meterEl(lvl, big) {
+  const m = h('div', { class: 'meter' + (big ? ' big' : ''), 'aria-label': lvl + ' out of 5' });
+  for (let i = 0; i < 5; i++) m.append(h('i', { class: i < lvl ? 'on' : '' }));
+  return m;
+}
+function weekEl(hl) {
+  return h('div', { class: 'week' }, DAYS.map(d => h('div', { class: 'd' + (hl && hl.includes(d.k) ? ' hl' : '') }, h('b', null, d.kan), d.s)));
+}
+function optButtons(opts, render, onPick, cls = '') {
+  const wrap = h('div', { class: 'opts ' + cls });
+  const btns = opts.map(o => {
+    const b = h('button', { class: 'opt', type: 'button' }, render(o));
+    b.addEventListener('click', () => {
+      if (G.answered) return;
+      btns.forEach(x => (x.disabled = true));
+      onPick(o, b, btns);
+    });
+    wrap.append(b);
+    return b;
+  });
+  return wrap;
+}
+function jpOpt(item) { return [h('span', { class: 'jp', lang: 'ja' }, item.k), h('span', { class: 'rm' }, item.r)]; }
+function markOpts(btns, opts, correct, chosenBtn, ok) {
+  btns.forEach((b, i) => { if (opts[i] === correct) b.classList.add('right'); });
+  if (!ok) chosenBtn.classList.add('wrong');
+}
+
+/* =========================================================
+   Games
+   ========================================================= */
+const N_Q = 10;
+
+// 1. ことば: picture words
+const VOCAB = [
+  ...Object.values(PLACES).map(p => ({ cat: 'place', k: p.k, r: p.r, en: p.en, e: p.e })),
+  ...ACTS.filter((a, i) => ACTS.findIndex(b => b.k === a.k) === i).map(a => ({ cat: 'thing', k: a.k, r: a.r, en: a.l, e: a.e })),
+  ...Object.values(VERBS).map(v => ({ cat: 'verb', k: v.m, r: v.rm, en: v.en, e: v.e })),
+  ...REL.map(t => ({ cat: 'time', k: t.k, r: t.r, en: t.en, e: t.e })),
+];
+const GAME_WORDS = {
+  id: 'words', no: '01', kana: 'ことば', romaji: 'kotoba', en: 'Picture Words', icon: '🍙', color: 'var(--l-green)',
+  desc: 'See a picture or hear a word, then pick the match.',
+  makePool() {
+    const out = [];
+    for (const it of VOCAB) {
+      out.push({ id: 'see:' + it.cat + it.k, type: 'see', it });
+      out.push({ id: 'hear:' + it.cat + it.k, type: 'hear', it });
+    }
+    return out;
+  },
+  render(q, area) {
+    const it = q.it;
+    const others = sample(VOCAB.filter(v => v.cat === it.cat && v.k !== it.k && v.e !== it.e), 3);
+    const opts = shuffle([it, ...others]);
+    const finish = (ok, chosen) => answered(ok, {
+      title: ok ? null : `It was ${it.k}`,
+      body: [h('p', null, h('span', { style: 'font-size:34px' }, it.e), ' ', h('b', { class: 'jp', lang: 'ja' }, it.k), ' ', h('span', { class: 'rm', style: 'display:inline' }, '(' + it.r + ')'), ' = ', it.en)],
+      say: it.k,
+    });
+    if (q.type === 'see') {
+      area.append(h('p', { class: 'q-ask' }, 'Which word is this?'),
+        h('div', { class: 'big-emoji', 'aria-hidden': 'true' }, it.e), h('div', { class: 'big-en' }, it.en),
+        optButtons(opts, jpOpt, (o, b, btns) => { const ok = o === it; markOpts(btns, opts, it, b, ok); finish(ok, o); }));
+    } else {
+      const play = () => Voice.say(it.k);
+      area.append(h('p', { class: 'q-ask' }, 'Listen! Which picture is it?'),
+        h('div', { class: 'speak-row' }, speakBtn(play)),
+        optButtons(opts, o => [h('span', { 'aria-hidden': 'true' }, o.e), h('span', { class: 'lab' }, o.en)], (o, b, btns) => {
+          const ok = o === it; markOpts(btns, opts, it, b, ok); finish(ok, o);
+        }, 'pics'));
+      area.querySelectorAll('.opts .opt').forEach(b => b.classList.add('pic'));
+      setTimeout(play, 350);
+    }
+  },
+};
+
+// 2. ようび: days of the week
+const GAME_DAYS = {
+  id: 'days', no: '02', kana: 'ようび', romaji: 'youbi', en: 'Days of the Week', icon: '📅', color: 'var(--l-orange)',
+  desc: 'Moon, fire, water, tree, gold, earth, sun: learn all 7 days.',
+  makePool() {
+    const out = [];
+    for (const d of DAYS) for (const t of ['sym', 'en', 'hear', 'next', 'before']) out.push({ id: t + ':' + d.k, type: t, d });
+    return out;
+  },
+  render(q, area) {
+    const d = q.d, i = DAYS.indexOf(d);
+    let target = d, ask, top, opts, renderOpt = jpOpt, sayFirst = null;
+    if (q.type === 'sym') {
+      ask = 'Which day uses this kanji?';
+      top = [h('div', { class: 'kanji-big', lang: 'ja' }, d.kan), h('div', { class: 'big-en' }, d.e + ' ' + d.mean)];
+    } else if (q.type === 'en') {
+      ask = 'How do you say this day in Japanese?';
+      top = [h('div', { class: 'big-emoji', 'aria-hidden': 'true' }, d.e), h('div', { class: 'big-en' }, d.en)];
+    } else if (q.type === 'hear') {
+      ask = 'Listen! Which day is it?';
+      sayFirst = d.k;
+      top = [h('div', { class: 'speak-row' }, speakBtn(() => Voice.say(d.k)))];
+      renderOpt = o => [h('span', { 'aria-hidden': 'true' }, o.e + ' '), o.en];
+    } else if (q.type === 'next') {
+      target = DAYS[(i + 1) % 7];
+      ask = `What day comes AFTER ${d.en}?`;
+      sayFirst = d.k + 'の つぎは なんようび？';
+      top = [h('div', { class: 'sentence', lang: 'ja' }, chunkEl({ k: d.k + 'の つぎは？', r: d.r + ' no tsugi wa?', p: '' })), h('div', { class: 'speak-row' }, speakBtn(() => Voice.say(sayFirst)))];
+    } else {
+      target = DAYS[(i + 6) % 7];
+      ask = `What day comes BEFORE ${d.en}?`;
+      sayFirst = d.k + 'の まえは なんようび？';
+      top = [h('div', { class: 'sentence', lang: 'ja' }, chunkEl({ k: d.k + 'の まえは？', r: d.r + ' no mae wa?', p: '' })), h('div', { class: 'speak-row' }, speakBtn(() => Voice.say(sayFirst)))];
+    }
+    opts = shuffle([target, ...sample(DAYS.filter(x => x !== target), 3)]);
+    area.append(h('p', { class: 'q-ask' }, ask), ...top,
+      optButtons(opts, renderOpt, (o, b, btns) => {
+        const ok = o === target; markOpts(btns, opts, target, b, ok);
+        answered(ok, {
+          title: ok ? null : `It was ${target.k}`,
+          body: [h('p', null, h('b', { class: 'jp', lang: 'ja' }, target.k), ' ', h('span', { class: 'rm', style: 'display:inline' }, '(' + target.r + ')'), ` = ${target.en}. ${target.kan} means ${target.mean} ${target.e}`), weekEl([target.k])],
+          say: target.k,
+        });
+      }));
+    if (sayFirst) setTimeout(() => Voice.say(sayFirst), 350);
+  },
+};
+
+// 3. どのくらい: how often
+const GAME_FREQ = {
+  id: 'freq', no: '03', kana: 'どのくらい', romaji: 'dono kurai', en: 'How Often?', icon: '🔁', color: 'var(--l-purple)',
+  desc: 'いつも, よく, ときどき, あまり, ぜんぜん and the ます / ません rule.',
+  makePool() {
+    const out = [];
+    for (const f of METER_FREQS) { out.push({ id: 'meter:' + f.k, type: 'meter', f }); out.push({ id: 'hearm:' + f.k, type: 'hearm', f }); }
+    for (const f of FREQS) out.push({ id: 'hearen:' + f.k, type: 'hearen', f });
+    for (let n = 0; n < 40; n++) {
+      const P = { person: pick(PEOPLE), act: pick(ACTS), freq: pick(FREQS.filter(f => f.k !== 'まいしゅう')) };
+      P.place = PLACES[pick(P.act.places)];
+      const s = build('act', P);
+      out.push({ id: 'end:' + s.id, type: 'end', s });
+      const s2 = genSentence(5, ['move']);
+      out.push({ id: 'fill:' + s2.id, type: 'fill', s: s2 });
+    }
+    return out;
+  },
+  render(q, area) {
+    const ruleTip = h('div', { class: 'tipbox' }, 'いつも, よく, ときどき, まいにち → 〜ます.  あまり, ぜんぜん → 〜ません.');
+    if (q.type === 'meter' || q.type === 'hearm' || q.type === 'hearen') {
+      const f = q.f;
+      let opts, ask, top, renderOpt;
+      if (q.type === 'meter') {
+        opts = shuffle([f, ...sample(METER_FREQS.filter(x => x !== f), 3)]);
+        ask = 'How often? Pick the word that matches the meter.';
+        top = [h('div', { class: 'center' }, meterEl(f.lvl, true))];
+        renderOpt = jpOpt;
+      } else if (q.type === 'hearm') {
+        opts = shuffle([f, ...sample(METER_FREQS.filter(x => x !== f), 3)]);
+        ask = 'Listen! Which meter matches the word?';
+        top = [h('div', { class: 'speak-row' }, speakBtn(() => Voice.say(f.k)))];
+        renderOpt = o => meterEl(o.lvl);
+        setTimeout(() => Voice.say(f.k), 350);
+      } else {
+        opts = shuffle([f, ...sample(FREQS.filter(x => x !== f), 3)]);
+        ask = 'Listen! What does it mean?';
+        top = [h('div', { class: 'speak-row' }, speakBtn(() => Voice.say(f.k)))];
+        renderOpt = o => [h('span', { 'aria-hidden': 'true' }, o.e + ' '), o.en];
+        setTimeout(() => Voice.say(f.k), 350);
+      }
+      area.append(h('p', { class: 'q-ask' }, ask), ...top, optButtons(opts, renderOpt, (o, b, btns) => {
+        const ok = o === f; markOpts(btns, opts, f, b, ok);
+        answered(ok, {
+          title: ok ? null : `It was ${f.k}`,
+          body: [h('p', null, h('b', { class: 'jp', lang: 'ja' }, f.k), ' ', h('span', { class: 'rm', style: 'display:inline' }, '(' + f.r + ')'), ' = ' + f.en + ' '), f.lvl != null ? meterEl(f.lvl) : null, ruleTip],
+          say: f.k,
+        });
+      }));
+      return;
+    }
+    if (q.type === 'end') {
+      const s = q.s, vi = s.ch.length - 1, v = s.ch[vi];
+      const verb = VERBS[s.P.act.v];
+      const right = s.P.freq.neg ? verb.n : verb.m;
+      const opts = shuffle([verb.m, verb.n]);
+      const shown = s.ch.slice(0, vi);
+      area.append(h('p', { class: 'q-ask' }, 'Finish the sentence: ます or ません?'), strip(s.ch.map(c => ({ ...c, neg: false }))),
+        h('div', { class: 'sentence', lang: 'ja' }, shown.map(c => chunkEl(c)), h('span', { class: 'chunk' }, h('span', { class: 'blank' }, '＿＿'), h('span', { class: 'rm' }, '?'))),
+        optButtons(opts, o => [h('span', { class: 'jp', lang: 'ja' }, o), h('span', { class: 'rm' }, o === verb.m ? verb.rm : verb.rn)], (o, b, btns) => {
+          const ok = o === right; markOpts(btns, opts, right, b, ok);
+          answered(ok, { body: [sentenceEl(s.ch), h('p', { class: 'en-line' }, s.en), ruleTip], sayChunks: s.ch });
+        }));
+      return;
+    }
+    // fill: pick the how-often word that matches the English
+    const s = q.s, fi = s.ch.findIndex(c => c.role === 'freq'), f = s.P.freq;
+    const opts = shuffle([f, ...sample(FREQS.filter(x => x !== f), 3)]);
+    area.append(h('p', { class: 'q-ask' }, 'Which how-often word fits?'), h('p', { class: 'en-line' }, s.en),
+      h('div', { class: 'sentence', lang: 'ja' }, s.ch.map((c, i) => i === fi ? h('span', { class: 'chunk' }, h('span', { class: 'blank' }, '＿＿＿'), h('span', { class: 'rm' }, '?')) : chunkEl(c))),
+      optButtons(opts, jpOpt, (o, b, btns) => {
+        const ok = o === f; markOpts(btns, opts, f, b, ok);
+        answered(ok, { title: ok ? null : `It was ${f.k} (${f.en})`, body: [sentenceEl(s.ch), ruleTip], sayChunks: s.ch });
+      }));
+  },
+};
+
+// 4. じょし: particle pop
+const PART_DISTRACT = { 'で': ['に', 'を', 'は'], 'に': ['で', '✖', 'を'], 'を': ['は', 'で', 'に'], 'は': ['を', 'も', 'に'], '✖': ['に', 'で', 'は'], 'も': ['は', 'を', 'の'], 'の': ['は', 'を', 'も'], 'か': ['は', 'の', 'を'] };
+function blankable(s) {
+  const out = [];
+  s.ch.forEach((c, i) => {
+    if (c.p) out.push({ i, ans: c.p });
+    else if (c.role === 'when') out.push({ i, ans: '✖' });
+  });
+  return out;
+}
+const GAME_PART = {
+  id: 'particles', no: '04', kana: 'じょし', romaji: 'joshi', en: 'Particle Pop', icon: '🎯', color: 'var(--l-blue)',
+  desc: 'は を で に も の か: tap the tiny word that fits.',
+  makePool() {
+    const out = [];
+    const add = s => {
+      const bl = blankable(s);
+      // prefer the tricky ones: で / に / ✖
+      const tricky = bl.filter(b => ['で', 'に', '✖'].includes(b.ans));
+      const b = Math.random() < .6 && tricky.length ? pick(tricky) : pick(bl);
+      if (b) out.push({ id: s.id + '#' + b.i, type: b.ans, s, bi: b.i, ans: b.ans });
+    };
+    for (let n = 0; n < 140; n++) add(genSentence(pick([4, 5, 5])));
+    for (const s of CURATED) add(s);
+    return out;
+  },
+  render(q, area) {
+    const s = q.s;
+    const opts = shuffle([q.ans, ...PART_DISTRACT[q.ans]]);
+    const sent = sentenceEl(s.ch, { blank: q.bi });
+    area.append(h('p', { class: 'q-ask' }, 'Which particle goes in the blank?'), strip(s.ch), h('p', { class: 'en-line' }, s.en), sent);
+    const wrap = h('div', { class: 'opts' });
+    const btns = opts.map(p => {
+      const b = h('button', { class: 'opt part', type: 'button', style: `--pc: var(--p-${{ 'は': 'wa', 'を': 'o', 'で': 'de', 'に': 'ni', 'も': 'mo', 'の': 'no', 'か': 'ka', '✖': 'x' }[p]})` },
+        h('span', { lang: 'ja' }, p === '✖' ? '✖' : p), h('span', { class: 'lab' }, p === '✖' ? 'no particle' : PART[p].r));
+      b.addEventListener('click', () => {
+        if (G.answered) return;
+        btns.forEach(x => (x.disabled = true));
+        const ok = p === q.ans;
+        markOpts(btns, opts, q.ans, b, ok);
+        const bl = sent.querySelector('.blank');
+        bl.textContent = q.ans === '✖' ? '✖' : q.ans; bl.classList.add('filled', 'pt-' + q.ans);
+        const ans = q.ans;
+        answered(ok, {
+          title: ok ? null : (ans === '✖' ? 'No particle here!' : `It was ${ans} (${PART[ans].r})`),
+          body: [h('p', null, PART[ans].job), h('div', { class: 'tipbox', lang: 'ja' }, PART[ans].tip), sentenceEl(s.ch)],
+          sayChunks: s.ch,
+        });
+      });
+      wrap.append(b);
+      return b;
+    });
+    area.append(wrap);
+  },
+};
+
+// 5. ぶんをつくろう: sentence builder
+const GAME_BUILD = {
+  id: 'build', no: '05', kana: 'ぶんをつくろう', romaji: 'bun o tsukurou', en: 'Sentence Builder', icon: '🧱', color: 'var(--l-red)',
+  desc: 'Put the word blocks in order. The verb always goes last!',
+  tiers: [3, 3, 3, 4, 4, 4, 4, 5, 5, 5],
+  makePool() {
+    const out = [];
+    for (const size of [3, 4, 5]) for (let n = 0; n < 50; n++) { const s = genSentence(size); out.push({ id: s.id, tier: size, s }); }
+    for (const s of CURATED) out.push({ id: s.id, tier: Math.min(5, Math.max(3, s.ch.length)), s });
+    return out;
+  },
+  render(q, area) {
+    const s = q.s, n = s.ch.length;
+    let order = shuffle([...Array(n).keys()]);
+    for (let t = 0; t < 10 && n > 1 && order.every((v, i) => v === i); t++) order = shuffle(order);
+    const placed = [];
+    let locked = false;
+    const slots = h('div', { class: 'slots', 'aria-label': 'Your sentence' });
+    const bank = h('div', { class: 'bank', 'aria-label': 'Word blocks' });
+    const check = h('button', { class: 'btn go', type: 'button', disabled: true }, '✔ Check');
+    const tile = (idx, inSlot) => {
+      const c = s.ch[idx];
+      const t = h('button', { class: 'tile', type: 'button', lang: 'ja' },
+        h('span', null, h('span', { class: 'jp' }, c.k), c.p && c.p !== '✖' ? h('span', { class: 'pt pt-' + c.p }, c.p) : null),
+        h('span', { class: 'rm' }, romajiOf(c)));
+      t.addEventListener('click', () => {
+        if (locked) return;
+        if (inSlot) placed.splice(placed.indexOf(idx), 1);
+        else { placed.push(idx); Voice.say(speechOf(c)); }
+        Sfx.play('tile');
+        draw();
+      });
+      t.dataset.idx = idx;
+      return t;
+    };
+    function draw() {
+      slots.innerHTML = ''; bank.innerHTML = '';
+      for (let i = 0; i < n; i++) slots.append(placed[i] != null ? tile(placed[i], true) : h('div', { class: 'slot' }));
+      for (const idx of order) if (!placed.includes(idx)) bank.append(tile(idx, false));
+      check.disabled = placed.length < n;
+    }
+    check.addEventListener('click', () => {
+      if (locked || placed.length < n) return;
+      locked = true; check.disabled = true;
+      const exact = placed.every((v, i) => v === i);
+      const ok = exact || (!s.strict && placed[n - 1] === n - 1);
+      slots.querySelectorAll('.tile').forEach((t, i) => t.classList.add(ok || placed[i] === i ? 'ok' : 'no'));
+      const body = [];
+      if (ok && !exact) body.push(h('p', null, 'That works, because the verb is last! The usual order is:'));
+      else if (!ok) body.push(h('p', null, placed[n - 1] !== n - 1 ? 'Remember: the verb always goes LAST. Here is the right order:' : 'Close! Here is the right order:'));
+      body.push(sentenceEl(s.ch), h('p', { class: 'en-line' }, s.en));
+      answered(ok, { body, sayChunks: s.ch });
+    });
+    draw();
+    area.append(h('p', { class: 'q-ask' }, 'Build this sentence in Japanese:'), h('p', { class: 'big-en' }, s.en), strip(s.ch),
+      slots, bank,
+      h('div', { class: 'build-actions' },
+        h('button', { class: 'btn alt', type: 'button', onclick: () => { if (!locked) { placed.length = 0; Sfx.play('tap'); draw(); } } }, '↺ Clear'),
+        h('button', { class: 'btn alt', type: 'button', onclick: () => Voice.say(sentenceSpeech(s.ch)) }, '🔊 Hint'),
+        check));
+  },
+};
+
+// 6. きいてね: listen and pick the pictures
+const GAME_LISTEN = {
+  id: 'listen', no: '06', kana: 'きいてね', romaji: 'kiite ne', en: 'Listen & Pick', icon: '🎧', color: 'var(--l-teal)',
+  desc: 'Hear a whole sentence and pick the matching picture story.',
+  makePool() {
+    const out = [];
+    for (let n = 0; n < 90; n++) {
+      const s = genSentence(pick([4, 4, 5]), ['act', 'act', 'move']);
+      const d1 = variant(s); if (!d1) continue;
+      let d2 = null;
+      for (let t = 0; t < 8 && !d2; t++) { const v = variant(s); if (v && stripSig(v) !== stripSig(d1)) d2 = v; }
+      if (!d2) continue;
+      out.push({ id: s.id, s, opts: shuffle([s, d1, d2]) });
+    }
+    return out;
+  },
+  render(q, area) {
+    const s = q.s;
+    const holder = h('div', { class: 'reveal' });
+    const play = () => Voice.say(sentenceSpeech(s.ch));
+    area.append(h('p', { class: 'q-ask' }, 'Listen to the sentence. Which pictures match?'),
+      h('div', { class: 'speak-row' }, speakBtn(play), slowBtn(() => Voice.chunks(s.ch, holder))), holder,
+      optButtons(q.opts, o => strip(o.ch), (o, b, btns) => {
+        const ok = o === s; markOpts(btns, q.opts, s, b, ok);
+        holder.append(sentenceEl(s.ch), h('p', { class: 'en-line' }, s.en));
+        answered(ok, { body: [h('p', null, ok ? 'You understood the whole sentence!' : 'Look at the pictures in the green box.')], sayChunks: s.ch, holder });
+      }, 'three'));
+    area.querySelectorAll('.opts .opt').forEach(b => b.classList.add('strip-opt'));
+    setTimeout(play, 400);
+  },
+};
+
+// 7. チャレンジ: a mixed ride
+const GAME_MIX = {
+  id: 'mix', no: '07', kana: 'チャレンジ', romaji: 'charenji', en: 'Challenge Ride', icon: '🏆', color: 'var(--l-pink)',
+  desc: 'A surprise mix from every station. Can you get 10 out of 10?',
+  makePool() {
+    const out = [];
+    for (const g of [GAME_WORDS, GAME_DAYS, GAME_FREQ, GAME_PART, GAME_BUILD, GAME_LISTEN]) {
+      let pool = g.makePool();
+      if (g === GAME_BUILD) pool = pool.filter(q => q.tier <= 4);
+      for (const q of sample(pool, 8)) out.push({ ...q, owner: g, group: g.id, id: g.id + '>' + q.id });
+    }
+    return out;
+  },
+};
+const GAMES = [GAME_WORDS, GAME_DAYS, GAME_FREQ, GAME_PART, GAME_BUILD, GAME_LISTEN, GAME_MIX];
+
+/* =========================================================
+   Never the same ride twice: remember which questions were seen
+   ========================================================= */
+function takeVaried(list, n) {
+  const groups = {};
+  for (const q of shuffle(list)) { const k = q.group || q.type || 'x'; (groups[k] = groups[k] || []).push(q); }
+  const keys = shuffle(Object.keys(groups)), out = [];
+  while (out.length < n && keys.some(k => groups[k].length)) for (const k of keys) if (groups[k].length && out.length < n) out.push(groups[k].pop());
+  return shuffle(out);
+}
+function pickQuestions(game) {
+  const pool = []; const ids = new Set();
+  for (const q of game.makePool()) if (!ids.has(q.id)) { ids.add(q.id); pool.push(q); }
+  const seen = new Set(S.seen[game.id] || []);
+  const last = new Set(S.last[game.id] || []);
+  let chosen;
+  if (game.tiers) {
+    chosen = []; const used = new Set();
+    for (const t of game.tiers) {
+      const tier = pool.filter(q => q.tier === t && !used.has(q.id));
+      let c = tier.filter(q => !seen.has(q.id));
+      if (!c.length) c = tier.filter(q => !last.has(q.id));
+      if (!c.length) c = tier;
+      const q = pick(c); used.add(q.id); chosen.push(q);
+    }
+  } else {
+    let fresh = pool.filter(q => !seen.has(q.id));
+    if (fresh.length < N_Q) {
+      // Seen them all: start the cycle again, but never reuse the last ride's questions
+      seen.clear();
+      fresh = pool.filter(q => !last.has(q.id));
+    }
+    chosen = takeVaried(fresh, N_Q);
+  }
+  chosen.forEach(q => seen.add(q.id));
+  S.seen[game.id] = [...seen].slice(-600);
+  S.last[game.id] = chosen.map(q => q.id);
+  save();
+  return chosen;
+}
+
+/* =========================================================
+   Game flow
+   ========================================================= */
+let G = null;
+const views = ['home', 'play', 'results', 'stickers'];
+function show(v) {
+  views.forEach(x => ($('#v-' + x).hidden = x !== v));
+  window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
+}
+
+function startGame(game) {
+  Sfx.play('start');
+  G = { game, qs: pickQuestions(game), i: 0, correct: 0, streak: 0, marks: [], answered: false };
+  $('#combo').hidden = true;
+  $('#play-title').innerHTML = '';
+  $('#play-title').append(h('span', { lang: 'ja' }, game.icon + ' ' + game.kana), h('small', null, game.en));
+  show('play');
+  nextQuestion();
+}
+function drawCars() {
+  const cars = $('#cars'); cars.innerHTML = '';
+  for (let i = 0; i < N_Q; i++) cars.append(h('div', { class: 'car' + (G.marks[i] === true ? ' ok' : G.marks[i] === false ? ' no' : i === G.i ? ' now' : ''), title: 'Question ' + (i + 1) }));
+}
+function nextQuestion() {
+  Voice.stop();
+  if (G.i >= G.qs.length) return showResults();
+  G.answered = false;
+  const q = G.qs[G.i];
+  const area = $('#q-area'); area.innerHTML = '';
+  $('#feedback').hidden = true; $('#feedback').innerHTML = '';
+  drawCars();
+  (q.owner || G.game).render(q, area);
+}
+function answered(ok, info) {
+  if (G.answered) return;
+  G.answered = true;
+  G.marks[G.i] = ok;
+  if (ok) { G.correct++; G.streak++; S.stars++; save(); } else G.streak = 0;
+  updateStars();
+  drawCars();
+  Sfx.play(ok ? 'ok' : 'no');
+  if (ok) {
+    const right = $('#q-area .right') || $('#q-area .tile.ok') || $('#q-area');
+    FX.burstAt(right, G.streak >= 3 ? 60 : 28);
+  }
+  const combo = $('#combo');
+  if (G.streak >= 3) { combo.hidden = false; combo.textContent = `🔥 ${G.streak} in a row!`; combo.style.animation = 'none'; void combo.offsetWidth; combo.style.animation = ''; if (G.streak % 3 === 0) setTimeout(() => Sfx.play('combo'), 450); }
+  else combo.hidden = true;
+
+  const [jp, en] = ok ? pick(PRAISE) : pick(OOPS);
+  const fb = $('#feedback');
+  fb.className = 'feedback ' + (ok ? 'ok' : 'no');
+  fb.innerHTML = '';
+  const hear = () => info.sayChunks ? Voice.say(sentenceSpeech(info.sayChunks)) : Voice.say(info.say);
+  const slow = () => Voice.chunks(info.sayChunks, info.holder || fb.querySelector('.fb-body'));
+  const next = h('button', { class: 'btn go', type: 'button', onclick: () => { Sfx.play('tap'); G.i++; nextQuestion(); } }, G.i + 1 >= N_Q ? 'Finish 🏁' : 'Next ▶');
+  fb.append(
+    h('div', { class: 'fb-face', 'aria-hidden': 'true' }, ok ? '😺' : '🙀'),
+    h('div', { class: 'fb-title' }, h('span', { lang: 'ja' }, jp), h('small', null, en + (info.title ? ' ' + info.title : ''))),
+    h('div', { class: 'fb-body' }, info.body || []),
+    h('div', { class: 'fb-actions' },
+      (info.say || info.sayChunks) ? h('button', { class: 'btn alt', type: 'button', onclick: hear }, '🔊 Hear it') : null,
+      info.sayChunks ? h('button', { class: 'btn alt', type: 'button', onclick: slow }, '🐢 Slowly') : null,
+      next));
+  fb.hidden = false;
+  setTimeout(() => { fb.scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth', block: 'nearest' }); next.focus({ preventScroll: true }); }, 60);
+  setTimeout(hear, 450);
+}
+
+function showResults() {
+  Voice.stop();
+  const c = G.correct;
+  const stars = c >= 9 ? 3 : c >= 6 ? 2 : c >= 3 ? 1 : 0;
+  let bonus = 0;
+  if (c === N_Q) { bonus = 3; S.stars += bonus; }
+  S.best[G.game.id] = Math.max(S.best[G.game.id] || 0, stars);
+  let sticker = null;
+  if (c >= 6) {
+    const left = STICKERS.filter(x => !S.stickers.includes(x));
+    if (left.length) { sticker = pick(left); S.stickers.push(sticker); }
+  }
+  save(); updateStars();
+  const titles = [['もういちど！', 'Try again, you can do it!'], ['いいね！', 'Good ride!'], ['すごい！', 'Great ride!'], ['かんぺき！', 'Perfect ride!']];
+  const [tj, te] = c === N_Q ? titles[3] : titles[stars] || titles[0];
+  const r = $('#results'); r.innerHTML = '';
+  r.append(
+    h('div', { class: 'res-stars', 'aria-label': stars + ' of 3 stars' }, [0, 1, 2].map(i => h('span', { class: i < stars ? '' : 'off' }, '⭐'))),
+    h('div', { class: 'res-title', lang: 'ja' }, tj), h('p', null, te),
+    h('p', { class: 'res-score' }, `${c} / ${N_Q} right`, bonus ? `  ·  +${bonus} bonus stars!` : ''),
+    sticker ? h('div', { class: 'new-sticker' }, h('span', { 'aria-hidden': 'true' }, sticker), h('div', null, 'New sticker!', h('br'), h('small', null, `${S.stickers.length} of ${STICKERS.length} collected`))) : (c < 6 ? h('p', null, 'Get 6 or more right to win a sticker.') : h('p', null, 'You collected every sticker! 🎉')),
+    h('div', { class: 'res-actions' },
+      h('button', { class: 'btn go', type: 'button', onclick: () => startGame(G.game) }, '🔁 Ride again (new questions)'),
+      h('button', { class: 'btn alt', type: 'button', onclick: goHome }, '🗺️ Station map')));
+  show('results');
+  Sfx.play(stars >= 2 ? 'fanfare' : 'start');
+  if (stars >= 1) { FX.burst(stars * 50, innerWidth / 2, innerHeight / 4); }
+  if (sticker) setTimeout(() => Sfx.play('sticker'), 1600);
+  setTimeout(() => Voice.say(tj.replace('！', '')), 900);
+}
+
+/* =========================================================
+   Home + stickers
+   ========================================================= */
+function rankOf(n) { let r = RANKS[0]; for (const x of RANKS) if (n >= x.at) r = x; return r; }
+function updateStars() { $('#star-count').textContent = S.stars; }
+function goHome() {
+  Voice.stop();
+  const st = $('#stations'); st.innerHTML = '';
+  for (const g of GAMES) {
+    const b = S.best[g.id] || 0;
+    st.append(h('button', { class: 'sign', type: 'button', style: '--c:' + g.color, onclick: () => startGame(g), 'aria-label': `${g.en} station` },
+      h('div', { class: 'sign-top' },
+        h('span', { class: 'sign-num', 'aria-hidden': 'true' }, 'NX', h('b', null, g.no)),
+        h('span', { class: 'sign-kana', lang: 'ja' }, g.kana, h('small', null, g.romaji)),
+        h('span', { class: 'sign-icon', 'aria-hidden': 'true' }, g.icon)),
+      h('div', { class: 'sign-band' }, h('span', null, g.en), h('span', { class: 'sign-stars', 'aria-label': `best ${b} of 3 stars` }, '★'.repeat(b) + '☆'.repeat(3 - b))),
+      h('div', { class: 'sign-desc' }, g.desc)));
+  }
+  const r = rankOf(S.stars), nx = RANKS.find(x => x.at > S.stars);
+  const rk = $('#rank'); rk.innerHTML = '';
+  rk.append(h('span', { style: 'font-size:34px', 'aria-hidden': 'true' }, r.e),
+    h('div', null, h('b', { lang: 'ja' }, r.k), ' ', h('span', null, r.en + ' rank')),
+    h('div', { class: 'rank-bar', 'aria-hidden': 'true' }, h('i', { style: `width:${nx ? Math.round((S.stars - r.at) / (nx.at - r.at) * 100) : 100}%` })),
+    h('small', null, nx ? `${nx.at - S.stars} more ⭐ to ${nx.e} ${nx.en}` : 'Top rank!'));
+  $('#open-stickers').textContent = `📒 Sticker Book (${S.stickers.length}/${STICKERS.length})`;
+  updateStars();
+  show('home');
+}
+function showStickers() {
+  const g = $('#sticker-grid'); g.innerHTML = '';
+  for (const s of STICKERS) g.append(S.stickers.includes(s) ? h('div', { class: 'stk' }, s) : h('div', { class: 'stk locked', 'aria-label': 'locked' }, '?'));
+  Sfx.play('tap');
+  show('stickers');
+}
+
+/* =========================================================
+   Settings + start
+   ========================================================= */
+function applySettings() {
+  $('#t-sound').setAttribute('aria-pressed', S.settings.sound);
+  $('#t-sound').firstChild.textContent = S.settings.sound ? '🔊' : '🔇';
+  $('#t-slow').setAttribute('aria-pressed', S.settings.slow);
+  $('#t-romaji').setAttribute('aria-pressed', S.settings.romaji);
+  document.body.classList.toggle('no-romaji', !S.settings.romaji);
+}
+$('#t-sound').addEventListener('click', () => { S.settings.sound = !S.settings.sound; applySettings(); save(); Sfx.play('tap'); });
+$('#t-slow').addEventListener('click', () => { S.settings.slow = !S.settings.slow; applySettings(); save(); Sfx.play('tap'); Voice.say(S.settings.slow ? 'ゆっくり' : 'ふつう'); });
+$('#t-romaji').addEventListener('click', () => { S.settings.romaji = !S.settings.romaji; applySettings(); save(); Sfx.play('tap'); });
+$('#brand').addEventListener('click', goHome);
+$('#quit').addEventListener('click', () => { Sfx.play('tap'); goHome(); });
+$('#open-stickers').addEventListener('click', showStickers);
+$('#stk-back').addEventListener('click', goHome);
+$('#home-mascot').addEventListener('click', e => { const m = e.currentTarget; m.classList.remove('bounce'); void m.offsetWidth; m.classList.add('bounce'); Sfx.play('tap'); Voice.say('にゃあ！ がんばって！'); });
+document.addEventListener('pointerdown', () => Sfx.ensure(), { once: true });
+
+FX.init();
+Voice.init();
+applySettings();
+goHome();
+</script>
+</body>
+</html>
